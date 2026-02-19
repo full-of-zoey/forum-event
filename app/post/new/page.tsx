@@ -266,10 +266,10 @@ export default function NewPostPage() {
               onChange={(e) => setContent(e.target.value)}
               placeholder={
                 isQnA
-                  ? '연사에게 궁금한 점을 자유롭게 적어주세요...'
+                  ? '연사에게 궁금한 점을 자유롭게 적어주세요.'
                   : category === 'AI 교육 사례 공유/고민'
-                  ? 'AI 활용 교육 사례나 현장의 고민을 자유롭게 나눠주세요...'
-                  : '다른 선생님들과 함께 해보고 싶은 일을 이야기해주세요...'
+                  ? '학교를 포함한 현장에서 실천하고 계시는 AI 활용 교육 사례를 공유해주세요! 자랑도 좋고 고민 나눔도 좋습니다 :)'
+                  : '다른 선생님들과 함께 해보고 싶은 일을 이야기해주세요.'
               }
               rows={6}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition text-gray-900 placeholder:text-gray-300 resize-none"

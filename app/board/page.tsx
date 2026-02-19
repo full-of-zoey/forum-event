@@ -74,7 +74,7 @@ export default function BoardPage() {
           title: d.title,
           content: d.content,
           category: d.category,
-          reactionsCount: d.reactionsCount || EMPTY_REACTIONS_COUNT,
+          reactionsCount: { ...EMPTY_REACTIONS_COUNT, ...(d.reactionsCount || {}) },
           userReactions,
           createdAt: d.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
           authorName: d.authorName || '알 수 없음',

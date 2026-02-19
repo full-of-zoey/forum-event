@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getSession } from '@/lib/session'
-import { REACTION_EMOJIS, type ReactionKey, type ReactionsCount } from '@/lib/constants'
+import { REACTION_EMOJIS, EMPTY_REACTIONS_COUNT, type ReactionKey, type ReactionsCount } from '@/lib/constants'
 
 interface ReactionBarProps {
   postId: string
@@ -21,7 +21,7 @@ export default function ReactionBar({
   initialUserReactions,
   mode,
 }: ReactionBarProps) {
-  const [reactions, setReactions] = useState<ReactionsCount>(initialReactions)
+  const [reactions, setReactions] = useState<ReactionsCount>({ ...EMPTY_REACTIONS_COUNT, ...initialReactions })
   const [userReactions, setUserReactions] = useState<Set<ReactionKey>>(
     new Set(initialUserReactions)
   )
