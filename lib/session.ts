@@ -2,6 +2,7 @@ export interface Participant {
   id: string
   name: string
   affiliation: string
+  isAdmin?: boolean
 }
 
 const SESSION_KEY = 'ai-forum-participant'
@@ -23,4 +24,16 @@ export function setSession(participant: Participant): void {
 
 export function clearSession(): void {
   localStorage.removeItem(SESSION_KEY)
+}
+
+export function setAdminFlag(): void {
+  const session = getSession()
+  if (session) {
+    setSession({ ...session, isAdmin: true })
+  }
+}
+
+export function isAdmin(): boolean {
+  const session = getSession()
+  return session?.isAdmin === true
 }

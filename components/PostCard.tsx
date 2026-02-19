@@ -2,21 +2,21 @@
 
 import Link from 'next/link'
 import { MessageCircle, Clock, Mic2 } from 'lucide-react'
-import { categoryColors } from '@/lib/constants'
+import { getCategoryStyle, type ReactionsCount, type ReactionKey } from '@/lib/constants'
 import ParticipantBadge from './ParticipantBadge'
-import LikeButton from './LikeButton'
+import ReactionBar from './ReactionBar'
 
 interface PostCardProps {
   id: string
   title: string
   content: string
   category: string
-  likesCount: number
+  reactionsCount: ReactionsCount
+  userReactions: ReactionKey[]
   commentsCount: number
   createdAt: string
   authorName: string
   authorAffiliation: string
-  liked: boolean
   speakerName?: string
 }
 
@@ -36,22 +36,29 @@ export default function PostCard({
   title,
   content,
   category,
-  likesCount,
+  reactionsCount,
+  userReactions,
   commentsCount,
   createdAt,
   authorName,
   authorAffiliation,
-  liked,
   speakerName,
 }: PostCardProps) {
   const isQnA = category === '연사에게 질문'
+  const style = getCategoryStyle(category)
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+      style={{ borderLeftWidth: '4px', borderLeftColor: style.border }}
+    >
       <Link href={`/post/${id}`} className="block p-4 pb-3">
         {/* 카테고리 + 시간 */}
         <div className="flex items-center justify-between mb-2">
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColors[category] || 'bg-gray-50 text-gray-500'}`}>
+          <span
+            className="text-xs font-medium px-2.5 py-1 rounded-full"
+            style={style.badge}
+          >
             {category}
           </span>
           <span className="text-xs text-gray-300 flex items-center gap-1">
@@ -78,7 +85,12 @@ export default function PostCard({
 
       {/* 하단 액션 */}
       <div className="px-4 py-2.5 border-t border-gray-50 flex items-center gap-3">
-        <LikeButton postId={id} initialCount={likesCount} initialLiked={liked} />
+        <ReactionBar
+          postId={id}
+          initialReactions={reactionsCount}
+          initialUserReactions={userReactions}
+          mode="compact"
+        />
         <Link
           href={`/post/${id}`}
           className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-gray-50 text-gray-400 hover:bg-gray-100 transition"

@@ -6,7 +6,7 @@ import { ArrowLeft, Mic2, ChevronDown, ChevronUp } from 'lucide-react'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getSession } from '@/lib/session'
-import { POST_CATEGORIES, SESSIONS } from '@/lib/constants'
+import { POST_CATEGORIES, SESSIONS, EMPTY_REACTIONS_COUNT } from '@/lib/constants'
 import Header from '@/components/Header'
 
 export default function NewPostPage() {
@@ -55,7 +55,7 @@ export default function NewPostPage() {
         title: isQnA ? `${selectedSpeaker}님에게 질문` : title.trim(),
         content: content.trim(),
         category,
-        likesCount: 0,
+        reactionsCount: EMPTY_REACTIONS_COUNT,
         createdAt: serverTimestamp(),
       }
 
@@ -122,64 +122,107 @@ export default function NewPostPage() {
                 질문할 연사를 선택해주세요
               </label>
               <div className="space-y-2">
-                {SESSIONS.map((sess) => (
+                {SESSIONS.filter((s) => s.number > 0).map((sess) => {
+                  const sessionLabel = sess.id === 'session-closing'
+                    ? `Closing · ${sess.time}`
+                    : `Session ${sess.number} · ${sess.time}`
+                  return (
+                    <div
+                      key={sess.id}
+                      className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+                    >
+                      {/* 세션 헤더 */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSession(expandedSession === sess.id ? '' : sess.id)}
+                        className="w-full px-4 py-3 flex items-center justify-between text-left"
+                      >
+                        <div>
+                          <span className="text-xs font-medium text-primary-500">
+                            {sessionLabel}
+                          </span>
+                          <p className="text-sm text-gray-700 font-medium mt-0.5 leading-snug">
+                            {sess.title}
+                          </p>
+                        </div>
+                        {expandedSession === sess.id ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                        )}
+                      </button>
+
+                      {/* 연사 목록 */}
+                      {expandedSession === sess.id && (
+                        <div className="border-t border-gray-100 px-2 py-2">
+                          {sess.speakers.map((speaker) => {
+                            const isSelected = selectedSession === sess.id && selectedSpeaker === speaker.name
+                            return (
+                              <button
+                                key={speaker.name}
+                                type="button"
+                                onClick={() => handleSelectSpeaker(sess.id, speaker.name)}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-left ${
+                                  isSelected
+                                    ? 'bg-primary-50 border border-primary-200'
+                                    : 'hover:bg-gray-50'
+                                }`}
+                              >
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  isSelected ? 'bg-primary-400 text-white' : 'bg-gray-100 text-gray-400'
+                                }`}>
+                                  <Mic2 className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <p className={`text-sm font-medium ${isSelected ? 'text-primary-700' : 'text-gray-900'}`}>
+                                    {speaker.name}
+                                  </p>
+                                  <p className="text-xs text-gray-400">{speaker.role}</p>
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* 사회자 */}
+                {SESSIONS.filter((s) => s.number === 0).map((sess) => (
                   <div
                     key={sess.id}
                     className="bg-white rounded-xl border border-gray-200 overflow-hidden"
                   >
-                    {/* 세션 헤더 */}
-                    <button
-                      type="button"
-                      onClick={() => setExpandedSession(expandedSession === sess.id ? '' : sess.id)}
-                      className="w-full px-4 py-3 flex items-center justify-between text-left"
-                    >
-                      <div>
-                        <span className="text-xs font-medium text-primary-500">
-                          Session {sess.number} · {sess.time}
-                        </span>
-                        <p className="text-sm text-gray-700 font-medium mt-0.5 leading-snug">
-                          {sess.title}
-                        </p>
-                      </div>
-                      {expandedSession === sess.id ? (
-                        <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
-                      )}
-                    </button>
-
-                    {/* 연사 목록 */}
-                    {expandedSession === sess.id && (
-                      <div className="border-t border-gray-100 px-2 py-2">
-                        {sess.speakers.map((speaker) => {
-                          const isSelected = selectedSession === sess.id && selectedSpeaker === speaker.name
-                          return (
-                            <button
-                              key={speaker.name}
-                              type="button"
-                              onClick={() => handleSelectSpeaker(sess.id, speaker.name)}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-left ${
-                                isSelected
-                                  ? 'bg-primary-50 border border-primary-200'
-                                  : 'hover:bg-gray-50'
-                              }`}
-                            >
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                isSelected ? 'bg-primary-400 text-white' : 'bg-gray-100 text-gray-400'
-                              }`}>
-                                <Mic2 className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <p className={`text-sm font-medium ${isSelected ? 'text-primary-700' : 'text-gray-900'}`}>
-                                  {speaker.name}
-                                </p>
-                                <p className="text-xs text-gray-400">{speaker.role}</p>
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
+                    <div className="px-2 py-2">
+                      {sess.speakers.map((speaker) => {
+                        const isSelected = selectedSession === sess.id && selectedSpeaker === speaker.name
+                        return (
+                          <button
+                            key={speaker.name}
+                            type="button"
+                            onClick={() => handleSelectSpeaker(sess.id, speaker.name)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-left ${
+                              isSelected
+                                ? 'bg-primary-50 border border-primary-200'
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              isSelected ? 'bg-primary-400 text-white' : 'bg-gray-100 text-gray-400'
+                            }`}>
+                              <Mic2 className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className={`text-sm font-medium ${isSelected ? 'text-primary-700' : 'text-gray-900'}`}>
+                                {speaker.name} <span className="text-xs text-gray-400 font-normal">사회자</span>
+                              </p>
+                              <p className="text-xs text-gray-400">{speaker.role}</p>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -224,8 +267,8 @@ export default function NewPostPage() {
               placeholder={
                 isQnA
                   ? '연사에게 궁금한 점을 자유롭게 적어주세요...'
-                  : category === 'AI 교육 사례 자랑'
-                  ? '학교에서 실천하고 있는 AI 활용 교육 사례를 공유해주세요...'
+                  : category === 'AI 교육 사례 공유/고민'
+                  ? 'AI 활용 교육 사례나 현장의 고민을 자유롭게 나눠주세요...'
                   : '다른 선생님들과 함께 해보고 싶은 일을 이야기해주세요...'
               }
               rows={6}

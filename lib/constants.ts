@@ -1,7 +1,7 @@
 export const CATEGORIES = [
   '전체',
   '연사에게 질문',
-  'AI 교육 사례 자랑',
+  'AI 교육 사례 공유/고민',
   '함께 해보고 싶은 일',
 ] as const
 
@@ -57,10 +57,72 @@ export const SESSIONS: Session[] = [
       { name: '류석영', role: 'KAIST 전산학부 학부장' },
     ],
   },
+  {
+    id: 'session-closing',
+    number: 4,
+    title: '디지털 시민성을 넘어, AI 시민성을 함께',
+    time: '16:50–17:00',
+    speakers: [
+      { name: '육심나', role: '카카오임팩트 사무국장/카카오 부사장' },
+    ],
+  },
+  {
+    id: 'session-mc',
+    number: 0,
+    title: '사회자',
+    time: '',
+    speakers: [
+      { name: '최태성', role: '별별한국사 역사커뮤니케이터' },
+    ],
+  },
 ]
 
-export const categoryColors: Record<string, string> = {
-  '연사에게 질문': 'bg-amber-50 text-amber-600',
-  'AI 교육 사례 자랑': 'bg-blue-50 text-blue-600',
-  '함께 해보고 싶은 일': 'bg-purple-50 text-purple-600',
+export interface CategoryStyle {
+  badge: { backgroundColor: string; color: string }
+  border: string
+}
+
+export const categoryStyles: Record<string, CategoryStyle> = {
+  '연사에게 질문': {
+    badge: { backgroundColor: '#FFFBEB', color: '#D97706' },
+    border: '#FCD34D',
+  },
+  'AI 교육 사례 공유/고민': {
+    badge: { backgroundColor: '#FDF2F8', color: '#DB2777' },
+    border: '#F9A8D4',
+  },
+  '함께 해보고 싶은 일': {
+    badge: { backgroundColor: '#EFF6FF', color: '#2563EB' },
+    border: '#93C5FD',
+  },
+}
+
+const defaultStyle: CategoryStyle = {
+  badge: { backgroundColor: '#F9FAFB', color: '#6B7280' },
+  border: '#E5E7EB',
+}
+
+export function getCategoryStyle(category: string): CategoryStyle {
+  return categoryStyles[category] || defaultStyle
+}
+
+// 이모지 리액션
+export const REACTION_EMOJIS = [
+  { key: 'thumbsUp', emoji: '👍', label: '좋아요' },
+  { key: 'heart', emoji: '❤️', label: '하트' },
+  { key: 'fire', emoji: '🔥', label: '불꽃' },
+  { key: 'clap', emoji: '👏', label: '박수' },
+  { key: 'wow', emoji: '😮', label: '놀람' },
+] as const
+
+export type ReactionKey = typeof REACTION_EMOJIS[number]['key']
+
+export type ReactionsCount = Record<ReactionKey, number>
+
+export const EMPTY_REACTIONS_COUNT: ReactionsCount = {
+  thumbsUp: 0,
+  heart: 0,
+  fire: 0,
+  clap: 0,
+  wow: 0,
 }

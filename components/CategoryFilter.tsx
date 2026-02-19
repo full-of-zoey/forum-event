@@ -9,7 +9,7 @@ interface CategoryFilterProps {
 
 export default function CategoryFilter({ selected, onChange }: CategoryFilterProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+    <div className="flex gap-2 overflow-x-auto py-1 scrollbar-hide">
       {CATEGORIES.map((cat) => (
         <button
           key={cat}

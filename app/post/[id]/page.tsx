@@ -2,26 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Clock, Mic2 } from 'lucide-react'
+import { ArrowLeft, Clock, Mic2, Trash2 } from 'lucide-react'
 import { doc, getDoc, getDocs, query, collection, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { getSession } from '@/lib/session'
-import { categoryColors, SESSIONS } from '@/lib/constants'
+import { getSession, isAdmin } from '@/lib/session'
+import {
+  getCategoryStyle, SESSIONS, EMPTY_REACTIONS_COUNT,
+  type ReactionsCount, type ReactionKey,
+} from '@/lib/constants'
+import { deletePost } from '@/lib/deletePost'
 import Header from '@/components/Header'
 import ParticipantBadge from '@/components/ParticipantBadge'
-import LikeButton from '@/components/LikeButton'
+import ReactionBar from '@/components/ReactionBar'
 import CommentSection from '@/components/CommentSection'
 
 interface PostDetail {
   id: string
+  participantId: string
   title: string
   content: string
   category: string
-  likesCount: number
+  reactionsCount: ReactionsCount
+  userReactions: ReactionKey[]
   createdAt: string
   authorName: string
   authorAffiliation: string
-  liked: boolean
   speakerName?: string
   sessionId?: string
 }
@@ -43,6 +48,7 @@ export default function PostDetailPage() {
   const postId = params.id as string
   const [post, setPost] = useState<PostDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const session = getSession()
@@ -64,32 +70,46 @@ export default function PostDetailPage() {
 
     const d = docSnap.data()
 
-    let liked = false
+    let userReactions: ReactionKey[] = []
     if (session) {
-      const likesSnap = await getDocs(
+      const reactionsSnap = await getDocs(
         query(
-          collection(db, 'likes'),
+          collection(db, 'reactions'),
           where('postId', '==', postId),
           where('participantId', '==', session.id)
         )
       )
-      liked = !likesSnap.empty
+      userReactions = reactionsSnap.docs.map((d) => d.data().emoji as ReactionKey)
     }
 
     setPost({
       id: docSnap.id,
+      participantId: d.participantId || '',
       title: d.title,
       content: d.content,
       category: d.category,
-      likesCount: d.likesCount || 0,
+      reactionsCount: d.reactionsCount || EMPTY_REACTIONS_COUNT,
+      userReactions,
       createdAt: d.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
       authorName: d.authorName || '알 수 없음',
       authorAffiliation: d.authorAffiliation || '',
-      liked,
       speakerName: d.speakerName || undefined,
       sessionId: d.sessionId || undefined,
     })
     setLoading(false)
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('정말 이 글을 삭제하시겠습니까?')) return
+    setDeleting(true)
+    try {
+      await deletePost(postId)
+      router.replace('/board')
+    } catch (err) {
+      console.error('삭제 오류:', err)
+      alert('삭제 중 오류가 발생했습니다.')
+      setDeleting(false)
+    }
   }
 
   if (loading) {
@@ -105,24 +125,42 @@ export default function PostDetailPage() {
 
   if (!post) return null
 
+  const session = getSession()
   const isQnA = post.category === '연사에게 질문'
   const sessionData = SESSIONS.find((s) => s.id === post.sessionId)
+  const catStyle = getCategoryStyle(post.category)
+  const canDelete = session && (session.id === post.participantId || isAdmin())
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
       <main className="max-w-lg mx-auto px-4 py-4">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-1 text-gray-400 hover:text-gray-600 transition mb-4 text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          돌아가기
-        </button>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1 text-gray-400 hover:text-gray-600 transition text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            돌아가기
+          </button>
+          {canDelete && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-1 text-red-300 hover:text-red-500 transition text-sm disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
+              삭제
+            </button>
+          )}
+        </div>
 
         <article className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColors[post.category] || 'bg-gray-50 text-gray-500'}`}>
+          <span
+            className="text-xs font-medium px-2.5 py-1 rounded-full"
+            style={catStyle.badge}
+          >
             {post.category}
           </span>
 
@@ -158,7 +196,12 @@ export default function PostDetailPage() {
           </div>
 
           <div className="pt-3 border-t border-gray-50">
-            <LikeButton postId={post.id} initialCount={post.likesCount} initialLiked={post.liked} />
+            <ReactionBar
+              postId={post.id}
+              initialReactions={post.reactionsCount}
+              initialUserReactions={post.userReactions}
+              mode="full"
+            />
           </div>
         </article>
 

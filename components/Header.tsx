@@ -1,11 +1,18 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { MessageSquare, Users, Sparkles } from 'lucide-react'
+import { MessageSquare, Bell, Sparkles, Shield } from 'lucide-react'
+import { isAdmin as checkIsAdmin } from '@/lib/session'
 
 export default function Header() {
   const pathname = usePathname()
+  const [admin, setAdmin] = useState(false)
+
+  useEffect(() => {
+    setAdmin(checkIsAdmin())
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -29,15 +36,27 @@ export default function Header() {
             <MessageSquare className="w-5 h-5" />
           </Link>
           <Link
-            href="/participants"
+            href="/notices"
             className={`p-2 rounded-lg transition ${
-              pathname === '/participants'
+              pathname === '/notices'
                 ? 'bg-primary-50 text-primary-600'
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            <Users className="w-5 h-5" />
+            <Bell className="w-5 h-5" />
           </Link>
+          {admin && (
+            <Link
+              href="/admin/dashboard"
+              className={`p-2 rounded-lg transition ${
+                pathname?.startsWith('/admin')
+                  ? 'bg-primary-50 text-primary-600'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <Shield className="w-5 h-5" />
+            </Link>
+          )}
         </nav>
       </div>
     </header>

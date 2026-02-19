@@ -3,13 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Mic2 } from 'lucide-react'
 import {
   collection, query, orderBy, onSnapshot, getDocs, where,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getSession } from '@/lib/session'
-import { type Category } from '@/lib/constants'
+import {
+  type Category, SESSIONS, EMPTY_REACTIONS_COUNT,
+  type ReactionsCount, type ReactionKey,
+} from '@/lib/constants'
 import Header from '@/components/Header'
 import PostCard from '@/components/PostCard'
 import CategoryFilter from '@/components/CategoryFilter'
@@ -19,12 +22,12 @@ interface Post {
   title: string
   content: string
   category: string
-  likesCount: number
+  reactionsCount: ReactionsCount
+  userReactions: ReactionKey[]
   createdAt: string
   authorName: string
   authorAffiliation: string
   commentsCount: number
-  liked: boolean
   speakerName?: string
 }
 
@@ -32,6 +35,7 @@ export default function BoardPage() {
   const router = useRouter()
   const [posts, setPosts] = useState<Post[]>([])
   const [selectedCategory, setSelectedCategory] = useState<Category>('전체')
+  const [selectedSpeaker, setSelectedSpeaker] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -52,16 +56,16 @@ export default function BoardPage() {
 
         const commentsSnap = await getDocs(collection(db, 'posts', docSnap.id, 'comments'))
 
-        let liked = false
+        let userReactions: ReactionKey[] = []
         if (session) {
-          const likesSnap = await getDocs(
+          const reactionsSnap = await getDocs(
             query(
-              collection(db, 'likes'),
+              collection(db, 'reactions'),
               where('postId', '==', docSnap.id),
               where('participantId', '==', session.id)
             )
           )
-          liked = !likesSnap.empty
+          userReactions = reactionsSnap.docs.map((d) => d.data().emoji as ReactionKey)
         }
 
         postsData.push({
@@ -69,12 +73,12 @@ export default function BoardPage() {
           title: d.title,
           content: d.content,
           category: d.category,
-          likesCount: d.likesCount || 0,
+          reactionsCount: d.reactionsCount || EMPTY_REACTIONS_COUNT,
+          userReactions,
           createdAt: d.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
           authorName: d.authorName || '알 수 없음',
           authorAffiliation: d.authorAffiliation || '',
           commentsCount: commentsSnap.size,
-          liked,
           speakerName: d.speakerName || undefined,
         })
       }
@@ -86,9 +90,28 @@ export default function BoardPage() {
     return () => unsubscribe()
   }, [router])
 
-  const filteredPosts = selectedCategory === '전체'
-    ? posts
-    : posts.filter((p) => p.category === selectedCategory)
+  const isQnACategory = selectedCategory === '연사에게 질문'
+
+  const allSpeakers = SESSIONS.flatMap((s) => s.speakers.map((sp) => sp.name))
+  const speakersWithQuestions = allSpeakers.filter((name) =>
+    posts.some((p) => p.category === '연사에게 질문' && p.speakerName === name)
+  )
+
+  useEffect(() => {
+    if (!isQnACategory) setSelectedSpeaker('')
+  }, [isQnACategory])
+
+  const filteredPosts = (() => {
+    let result = selectedCategory === '전체'
+      ? posts
+      : posts.filter((p) => p.category === selectedCategory)
+
+    if (isQnACategory && selectedSpeaker) {
+      result = result.filter((p) => p.speakerName === selectedSpeaker)
+    }
+
+    return result
+  })()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,6 +121,51 @@ export default function BoardPage() {
         <div className="mb-4">
           <CategoryFilter selected={selectedCategory} onChange={setSelectedCategory} />
         </div>
+
+        {/* 연사별 필터 */}
+        {isQnACategory && (
+          <div className="mb-4">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <button
+                onClick={() => setSelectedSpeaker('')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
+                  !selectedSpeaker
+                    ? 'bg-amber-100 text-amber-700 shadow-sm'
+                    : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-300'
+                }`}
+              >
+                <Mic2 className="w-3 h-3" />
+                전체 연사
+              </button>
+              {allSpeakers.map((name) => {
+                const hasQuestions = speakersWithQuestions.includes(name)
+                const questionCount = posts.filter((p) => p.category === '연사에게 질문' && p.speakerName === name).length
+                return (
+                  <button
+                    key={name}
+                    onClick={() => setSelectedSpeaker(selectedSpeaker === name ? '' : name)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
+                      selectedSpeaker === name
+                        ? 'bg-amber-100 text-amber-700 shadow-sm'
+                        : hasQuestions
+                        ? 'bg-white text-gray-600 border border-gray-200 hover:border-amber-300'
+                        : 'bg-white text-gray-300 border border-gray-100'
+                    }`}
+                  >
+                    {name}
+                    {questionCount > 0 && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                        selectedSpeaker === name ? 'bg-amber-200 text-amber-800' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {questionCount}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-12">
@@ -117,12 +185,12 @@ export default function BoardPage() {
                 title={post.title}
                 content={post.content}
                 category={post.category}
-                likesCount={post.likesCount}
+                reactionsCount={post.reactionsCount}
+                userReactions={post.userReactions}
                 commentsCount={post.commentsCount}
                 createdAt={post.createdAt}
                 authorName={post.authorName}
                 authorAffiliation={post.authorAffiliation}
-                liked={post.liked}
                 speakerName={post.speakerName}
               />
             ))}
