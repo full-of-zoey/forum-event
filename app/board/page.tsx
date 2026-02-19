@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Mic2 } from 'lucide-react'
+import { Plus, Mic2, Clock, Flame } from 'lucide-react'
 import {
   collection, query, orderBy, onSnapshot, getDocs, where,
 } from 'firebase/firestore'
@@ -36,6 +36,7 @@ export default function BoardPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [selectedCategory, setSelectedCategory] = useState<Category>('전체')
   const [selectedSpeaker, setSelectedSpeaker] = useState<string>('')
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>('recent')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -101,6 +102,11 @@ export default function BoardPage() {
     if (!isQnACategory) setSelectedSpeaker('')
   }, [isQnACategory])
 
+  const getPopularityScore = (post: Post) => {
+    const totalReactions = Object.values(post.reactionsCount).reduce((a, b) => a + b, 0)
+    return totalReactions + post.commentsCount * 2
+  }
+
   const filteredPosts = (() => {
     let result = selectedCategory === '전체'
       ? posts
@@ -108,6 +114,10 @@ export default function BoardPage() {
 
     if (isQnACategory && selectedSpeaker) {
       result = result.filter((p) => p.speakerName === selectedSpeaker)
+    }
+
+    if (sortBy === 'popular') {
+      result = [...result].sort((a, b) => getPopularityScore(b) - getPopularityScore(a))
     }
 
     return result
@@ -118,8 +128,34 @@ export default function BoardPage() {
       <Header />
 
       <main className="max-w-lg mx-auto px-4 py-4">
-        <div className="mb-4">
+        <div className="mb-3">
           <CategoryFilter selected={selectedCategory} onChange={setSelectedCategory} />
+        </div>
+
+        {/* 정렬 토글 */}
+        <div className="flex gap-1.5 mb-3">
+          <button
+            onClick={() => setSortBy('recent')}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              sortBy === 'recent'
+                ? 'bg-gray-800 text-white'
+                : 'bg-white text-gray-400 border border-gray-200'
+            }`}
+          >
+            <Clock className="w-3 h-3" />
+            최신순
+          </button>
+          <button
+            onClick={() => setSortBy('popular')}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              sortBy === 'popular'
+                ? 'bg-gray-800 text-white'
+                : 'bg-white text-gray-400 border border-gray-200'
+            }`}
+          >
+            <Flame className="w-3 h-3" />
+            인기순
+          </button>
         </div>
 
         {/* 연사별 필터 */}
