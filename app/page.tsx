@@ -60,13 +60,13 @@ export default function EntryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* 상단 포스터 이미지 */}
-      <div className="w-full max-w-[280px] mx-auto pt-6">
+      {/* 상단 배너 이미지 */}
+      <div className="w-full">
         <Image
-          src="/bg-entry-new.png"
-          alt="사이좋은 AI포럼 2026"
-          width={1108}
-          height={1574}
+          src="/banner-main.png"
+          alt="사이좋은 AI포럼 2026 - 카카오와 함께 만드는 아이들의 AI 미래"
+          width={4800}
+          height={640}
           className="w-full h-auto"
           priority
         />
