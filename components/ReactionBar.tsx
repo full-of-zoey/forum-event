@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where,
+  collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, increment,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getSession } from '@/lib/session'
@@ -47,11 +47,10 @@ export default function ReactionBar({
         for (const d of snap.docs) {
           await deleteDoc(doc(db, 'reactions', d.id))
         }
-        const newCount = Math.max(0, reactions[key] - 1)
         await updateDoc(doc(db, 'posts', postId), {
-          [`reactionsCount.${key}`]: newCount,
+          [`reactionsCount.${key}`]: increment(-1),
         })
-        setReactions((prev) => ({ ...prev, [key]: newCount }))
+        setReactions((prev) => ({ ...prev, [key]: Math.max(0, prev[key] - 1) }))
         setUserReactions((prev) => {
           const s = new Set(prev)
           s.delete(key)
@@ -64,11 +63,10 @@ export default function ReactionBar({
           emoji: key,
           createdAt: new Date(),
         })
-        const newCount = reactions[key] + 1
         await updateDoc(doc(db, 'posts', postId), {
-          [`reactionsCount.${key}`]: newCount,
+          [`reactionsCount.${key}`]: increment(1),
         })
-        setReactions((prev) => ({ ...prev, [key]: newCount }))
+        setReactions((prev) => ({ ...prev, [key]: prev[key] + 1 }))
         setUserReactions((prev) => new Set(prev).add(key))
       }
     } catch (err) {

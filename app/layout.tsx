@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '사이좋은 AI 포럼 2026',
-  description: '카카오임팩트 사이좋은 AI 포럼 2026 참가자 네트워킹',
+  title: '사이좋은 AI포럼 2026',
+  description: '카카오임팩트 사이좋은 AI포럼 2026 참가자 네트워킹',
 }
 
 export const viewport: Viewport = {

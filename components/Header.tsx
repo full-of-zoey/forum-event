@@ -21,7 +21,7 @@ export default function Header() {
           <div className="w-8 h-8 rounded-lg bg-primary-400 flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-gray-900 text-sm">사이좋은 AI 포럼</span>
+          <span className="font-bold text-gray-900 text-sm">사이좋은 AI포럼</span>
         </Link>
 
         <nav className="flex items-center gap-1">

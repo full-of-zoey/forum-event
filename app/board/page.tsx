@@ -50,39 +50,40 @@ export default function BoardPage() {
 
     const unsubscribe = onSnapshot(q, async (snapshot) => {
       const session = getSession()
-      const postsData: Post[] = []
 
-      for (const docSnap of snapshot.docs) {
-        const d = docSnap.data()
+      const postsData = await Promise.all(
+        snapshot.docs.map(async (docSnap) => {
+          const d = docSnap.data()
 
-        const commentsSnap = await getDocs(collection(db, 'posts', docSnap.id, 'comments'))
+          // 댓글 수 + 유저 리액션을 병렬로 조회
+          const [commentsSnap, userReactions] = await Promise.all([
+            getDocs(collection(db, 'posts', docSnap.id, 'comments')),
+            session
+              ? getDocs(
+                  query(
+                    collection(db, 'reactions'),
+                    where('postId', '==', docSnap.id),
+                    where('participantId', '==', session.id)
+                  )
+                ).then((snap) => snap.docs.map((d) => d.data().emoji as ReactionKey))
+              : Promise.resolve([] as ReactionKey[]),
+          ])
 
-        let userReactions: ReactionKey[] = []
-        if (session) {
-          const reactionsSnap = await getDocs(
-            query(
-              collection(db, 'reactions'),
-              where('postId', '==', docSnap.id),
-              where('participantId', '==', session.id)
-            )
-          )
-          userReactions = reactionsSnap.docs.map((d) => d.data().emoji as ReactionKey)
-        }
-
-        postsData.push({
-          id: docSnap.id,
-          title: d.title,
-          content: d.content,
-          category: d.category,
-          reactionsCount: { ...EMPTY_REACTIONS_COUNT, ...(d.reactionsCount || {}) },
-          userReactions,
-          createdAt: d.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-          authorName: d.authorName || '알 수 없음',
-          authorAffiliation: d.authorAffiliation || '',
-          commentsCount: commentsSnap.size,
-          speakerName: d.speakerName || undefined,
+          return {
+            id: docSnap.id,
+            title: d.title,
+            content: d.content,
+            category: d.category,
+            reactionsCount: { ...EMPTY_REACTIONS_COUNT, ...(d.reactionsCount || {}) },
+            userReactions,
+            createdAt: d.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+            authorName: d.authorName || '알 수 없음',
+            authorAffiliation: d.authorAffiliation || '',
+            commentsCount: commentsSnap.size,
+            speakerName: d.speakerName || undefined,
+          }
         })
-      }
+      )
 
       setPosts(postsData)
       setLoading(false)
@@ -233,6 +234,10 @@ export default function BoardPage() {
           </div>
         )}
       </main>
+
+      <footer className="text-center text-xs text-gray-300 py-4">
+        <a href="https://www.kakaoimpact.org" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition">&copy; 2026 kakaoimpact</a>
+      </footer>
 
       <Link
         href="/post/new"

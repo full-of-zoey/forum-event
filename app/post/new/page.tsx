@@ -293,6 +293,10 @@ export default function NewPostPage() {
           </button>
         </form>
       </main>
+
+      <footer className="text-center text-xs text-gray-300 py-4">
+        <a href="https://www.kakaoimpact.org" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition">&copy; 2026 kakaoimpact</a>
+      </footer>
     </div>
   )
 }

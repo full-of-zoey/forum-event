@@ -17,6 +17,21 @@ interface Notice {
   createdAt: string
 }
 
+// URL을 클릭 가능한 링크로 변환
+function linkify(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const parts = text.split(urlRegex)
+  return parts.map((part, i) =>
+    urlRegex.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary-500 underline break-all">
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  )
+}
+
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
   return date.toLocaleDateString('ko-KR', {
@@ -104,7 +119,7 @@ export default function NoticesPage() {
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{notice.title}</h3>
                 <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
-                  {notice.content}
+                  {linkify(notice.content)}
                 </p>
                 <p className="text-xs text-gray-400 mt-3">{notice.authorName}</p>
               </div>
@@ -112,6 +127,10 @@ export default function NoticesPage() {
           </div>
         )}
       </main>
+
+      <footer className="text-center text-xs text-gray-300 py-4">
+        <a href="https://www.kakaoimpact.org" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition">&copy; 2026 kakaoimpact</a>
+      </footer>
     </div>
   )
 }
