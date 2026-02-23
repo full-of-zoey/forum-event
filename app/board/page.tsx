@@ -210,8 +210,8 @@ export default function BoardPage() {
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-300 mb-2">아직 게시글이 없습니다</p>
-            <p className="text-sm text-gray-300">첫 번째 글을 작성해보세요!</p>
+            <p className="text-gray-300 mb-2">아직 남겨진 질문이 없습니다</p>
+            <p className="text-sm text-gray-300">첫 번째 질문을 작성해보세요!</p>
           </div>
         ) : (
           <div className="space-y-3">
