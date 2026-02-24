@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { MessageSquare, Bell, Sparkles, Shield } from 'lucide-react'
+import { MessageSquare, Megaphone, Sparkles, Shield } from 'lucide-react'
 import { isAdmin as checkIsAdmin } from '@/lib/session'
 
 export default function Header() {
@@ -43,7 +43,7 @@ export default function Header() {
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            <Bell className="w-5 h-5" />
+            <Megaphone className="w-5 h-5" />
           </Link>
           {admin && (
             <Link
