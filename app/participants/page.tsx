@@ -54,21 +54,6 @@ export default function ParticipantsPage() {
       <Header />
 
       <main className="max-w-lg mx-auto px-4 py-4">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center">
-              <Users className="w-6 h-6 text-primary-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">총 참가자</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : participants.length}
-                <span className="text-sm font-normal text-gray-400 ml-1">명</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
