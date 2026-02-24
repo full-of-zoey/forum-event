@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Building2 } from 'lucide-react'
+import { Users, Building2, ArrowUpAZ, ArrowDownAZ } from 'lucide-react'
 import { collection, getDocs, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getSession } from '@/lib/session'
@@ -18,6 +18,7 @@ export default function ParticipantsPage() {
   const router = useRouter()
   const [participants, setParticipants] = useState<Participant[]>([])
   const [loading, setLoading] = useState(true)
+  const [asc, setAsc] = useState(true)
 
   useEffect(() => {
     const session = getSession()
@@ -47,13 +48,27 @@ export default function ParticipantsPage() {
     return acc
   }, {})
 
-  const sortedAffiliations = Object.keys(grouped).sort()
+  const sortedAffiliations = Object.keys(grouped).sort((a, b) =>
+    asc ? a.localeCompare(b) : b.localeCompare(a)
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
       <main className="max-w-lg mx-auto px-4 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-gray-500">
+            총 <span className="font-semibold text-gray-900">{loading ? '...' : participants.length}</span>명
+          </p>
+          <button
+            onClick={() => setAsc(!asc)}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition px-2 py-1 rounded-lg hover:bg-gray-100"
+          >
+            {asc ? <ArrowUpAZ className="w-4 h-4" /> : <ArrowDownAZ className="w-4 h-4" />}
+            {asc ? 'ㄱ→ㅎ' : 'ㅎ→ㄱ'}
+          </button>
+        </div>
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
