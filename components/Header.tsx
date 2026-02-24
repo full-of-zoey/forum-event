@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { MessageSquare, Megaphone, Sparkles, Shield } from 'lucide-react'
+import { MessageSquare, Users, Megaphone, Sparkles, Shield } from 'lucide-react'
 import { isAdmin as checkIsAdmin } from '@/lib/session'
 
 export default function Header() {
@@ -34,6 +34,16 @@ export default function Header() {
             }`}
           >
             <MessageSquare className="w-5 h-5" />
+          </Link>
+          <Link
+            href="/participants"
+            className={`p-2 rounded-lg transition ${
+              pathname === '/participants'
+                ? 'bg-primary-50 text-primary-600'
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <Users className="w-5 h-5" />
           </Link>
           <Link
             href="/notices"
