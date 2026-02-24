@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, Building2 } from 'lucide-react'
-import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, getDocs, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getSession } from '@/lib/session'
 import Header from '@/components/Header'
@@ -29,13 +29,14 @@ export default function ParticipantsPage() {
   }, [router])
 
   const fetchParticipants = async () => {
-    const q = query(collection(db, 'participants'), orderBy('affiliation'), orderBy('name'))
+    const q = query(collection(db, 'participants'))
     const snapshot = await getDocs(q)
     const data = snapshot.docs.map((doc) => ({
       id: doc.id,
       name: doc.data().name,
       affiliation: doc.data().affiliation,
     }))
+    data.sort((a, b) => a.affiliation.localeCompare(b.affiliation) || a.name.localeCompare(b.name))
     setParticipants(data)
     setLoading(false)
   }
